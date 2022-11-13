@@ -1,0 +1,63 @@
+#  Generated with json-schema-to-graphql.
+#  DON'T EDIT BY HAND!
+
+type MonowrapManifest {
+  """
+  Name of the monorepo
+  """
+  name: String!
+
+  """
+  Path of the manifest
+  """
+  path: String
+
+  """
+  Commands that can be executed from the monorepo
+  """
+  commands: [Command!]!
+
+  """
+  Dependency list for the packages of the monorepo
+  """
+  dependencies: [Dependency!]!
+
+  """
+  Execute sub dependency after the given command completes
+  """
+  sub_deps_execute_after: String!
+}
+
+type Command {
+  """
+  Alias for the given command
+  """
+  alias: String!
+
+  """
+  Uri of the wrapper that this command will execute
+  """
+  uri: String!
+
+  """
+  Dependencies of the current command
+  """
+  requires: [String!]
+}
+
+type Dependency {
+  """
+  Name of the package
+  """
+  name: String!
+
+  """
+  Path of the package
+  """
+  path: String!
+
+  """
+  Dependencies of the current package
+  """
+  requires: [String!]
+}

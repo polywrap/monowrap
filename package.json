@@ -1,0 +1,32 @@
+{
+  "name": "monowrap",
+  "description": "Polywrap Rust Wrapper Template",
+  "private": true,
+  "version": "^0.9.0",
+  "scripts": {
+    "manifest:gen": "json-schema-to-graphql ./src/schemas/manifest.json ./src/schemas/manifest.graphql && npx ts-node scripts/manifest-gen.ts",
+    "codegen": "npx polywrap codegen",
+    "build": "npx polywrap build",
+    "test:env:up": "npx polywrap infra up --modules=eth-ens-ipfs",
+    "test:env:down": "npx polywrap infra down --modules=eth-ens-ipfs",
+    "deploy": "npx polywrap deploy",
+    "test": "yarn test:e2e && yarn test:workflow",
+    "test:e2e": "yarn test:e2e:codegen && jest --passWithNoTests --runInBand --verbose",
+    "test:e2e:codegen": "npx polywrap codegen -m ./src/__tests__/types/polywrap.app.yaml -g ./src/__tests__/types/wrap",
+    "test:workflow": "npx polywrap run -o ./workflows/output.json"
+  },
+  "devDependencies": {
+    "@bcherny/json-schema-ref-parser": "^9.0.9",
+    "@splitti/json-schema-to-graphql": "^0.1.5",
+    "@types/jest": "26.0.8",
+    "@types/mustache": "^4.2.1",
+    "cli-color": "^2.0.3",
+    "jest": "26.6.3",
+    "mustache": "^4.2.0",
+    "polywrap": "^0.9.0",
+    "prettier": "^2.7.1",
+    "ts-jest": "26.5.4",
+    "ts-node": "^10.9.1",
+    "typescript": "4.1.6"
+  }
+}

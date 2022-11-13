@@ -102,3 +102,11 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Polywrap
+build
+node_modules
+wrap
+.polywrap
+target
+workflows/output.json

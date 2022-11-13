@@ -1,0 +1,36 @@
+#import * from "./schemas/manifest.graphql"
+#import * into Fs from "ens/fs.polywrap.eth"
+
+type Module {
+  getManifest(path: String!): MonowrapManifest!
+
+#   buildGraph(manifest: MonowrapManifest!): Graph!
+
+#   executeCommand(graph: Graph!, command: String!): Boolean!
+}
+
+enum CommandStatus {
+  WAITING
+  RUNNING
+  FAILED
+  SKIPPED
+  FINISHED
+}
+
+type Node {
+  name: String!
+  path: String!
+  deps: UInt!
+  command: String!
+  status: CommandStatus!
+}
+
+type Graph {
+  manifest: MonowrapManifest!
+  vertices: Map! @annotate(type: "Map<String!, Node!>!")
+  adjList: Map! @annotate(type: "Map<String!, [String!]!>!")
+}
+
+type Env {
+  runSubJobsAfter: String! # command alias
+}

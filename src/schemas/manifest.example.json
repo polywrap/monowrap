@@ -1,0 +1,68 @@
+{
+  "name": "monowrap",
+  "commands": [
+      {
+          "alias": "codegen",
+          "uri": "wrap://ens/command.polywrap.eth",
+          "args": {
+              "command": "yarn codegen"
+          }
+      },
+      {
+          "alias": "build",
+          "uri": "wrap://ens/command.polywrap.eth",
+          "args": {
+              "command": "yarn build"
+          },
+          "requires": ["codegen"]
+      },
+      {
+          "alias": "lint",
+          "uri": "wrap://ens/command.polywrap.eth",
+          "args": {
+              "command": "yarn lint"
+          },
+          "requires": ["codegen"]
+      },
+      {
+          "alias": "test",
+          "uri": "wrap://ens/command.polywrap.eth",
+          "args": {
+              "command": "yarn test"
+          },
+          "requires": [
+              "build",
+              "lint"
+          ]
+      }
+  ],
+  "dependencies": [
+      {
+          "name": "A",
+          "path": "./wrapper-a"
+      },
+      {
+          "name": "B",
+          "path": "./wrapper-b",
+          "requires": [
+              "A"
+          ]
+      },
+      {
+          "name": "C",
+          "path": "./wrapper-c",
+          "requires": [
+              "A"
+          ]
+      },
+      {
+          "name": "D",
+          "path": "./wrapper-D",
+          "requires": [
+              "B",
+              "C"
+          ]
+      }
+  ],
+  "sub_deps_execute_after": "build"
+}
