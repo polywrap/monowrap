@@ -9,7 +9,7 @@ module.exports = {
       diagnostics: false,
     },
   },
-  testPathIgnorePatterns: [
-    ".polywrap"
-  ],
+  // testPathIgnorePatterns: [
+  //   ".polywrap"
+  // ],
 };

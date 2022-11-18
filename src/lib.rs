@@ -1,5 +1,8 @@
 pub mod manifest;
+pub mod graph;
+
 pub use manifest::*;
+pub use graph::*;
 pub mod wrap;
 pub use wrap::*;
 
@@ -13,4 +16,16 @@ pub fn get_manifest(args: ArgsGetManifest) -> MonowrapManifest {
     .unwrap();
 
     deserialize_manifest(manifest)
+}
+
+pub fn build_context_graphs(args: ArgsBuildContextGraphs) -> BuiltContextGraphs {
+    let command_graph = build_command_graph(&args.manifest);
+    let dependency_graph = build_dependency_graph(&args.manifest);
+
+    BuiltContextGraphs {
+        id: "N/A".to_string(),
+        manifest: args.manifest.to_owned(),
+        dependency_graph: dependency_graph,
+        command_graph: command_graph,
+    }
 }

@@ -2,9 +2,16 @@ name: template-wasm-rs
 format: 0.1.0
 validation: "./workflows/validator.cue"
 jobs:
-  sampleMethod:
+  getManifest:
     steps:
       - uri: fs/build
         method: getManifest
         args:
           path: "src/schemas/manifest.example.json"
+    jobs:
+      buildContextGraphs:
+        steps:
+          - uri: fs/build
+            method: buildContextGraphs
+            args:
+              manifest: $getManifest.0.data

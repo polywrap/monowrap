@@ -16,14 +16,20 @@ describe("Monowrap", () => {
   })
 
   it("calls sampleMethod", async () => {
-    const expected: string = "polywrap";
 
     const result = await App.Monowrap_Module.getManifest({
-      path: "",
+      path: "src/schemas/manifest.example.json",
     }, client, wrapperUri)
+
+    // console.log(result)
 
     expect(result.ok).toBeTruthy();
     if (!result.ok) return;
-    expect(result.value).toEqual(expected);
+
+    const res = await App.Monowrap_Module.buildContextGraphs({
+      manifest: result.value,
+    }, client, wrapperUri);
+
+    console.log(res)
   });
 });

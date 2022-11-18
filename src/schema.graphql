@@ -4,9 +4,9 @@
 type Module {
   getManifest(path: String!): MonowrapManifest!
 
-#   buildGraph(manifest: MonowrapManifest!): Graph!
+  buildContextGraphs(manifest: MonowrapManifest!): BuiltContextGraphs!
 
-#   executeCommand(graph: Graph!, command: String!): Boolean!
+  # executeCommand(graph: BuiltContextGraphs!, command: String!): Boolean!
 }
 
 enum CommandStatus {
@@ -17,20 +17,34 @@ enum CommandStatus {
   FINISHED
 }
 
-type Node {
+type CommandNode {
+  alias: String!
+  uri: String!
+  args: String!
+  deps: BigInt!
+}
+
+type CommandGraph {
+  vertices: Map! @annotate(type: "Map<String!, CommandNode!>!")
+  adjList: Map! @annotate(type: "Map<String!, [String!]!>!")
+}
+
+type DependencyNode {
   name: String!
   path: String!
-  deps: UInt!
+  deps: BigInt!
   command: String!
   status: CommandStatus!
 }
 
-type Graph {
-  manifest: MonowrapManifest!
-  vertices: Map! @annotate(type: "Map<String!, Node!>!")
+type DependencyGraph {
+  vertices: Map! @annotate(type: "Map<String!, DependencyNode!>!")
   adjList: Map! @annotate(type: "Map<String!, [String!]!>!")
 }
 
-type Env {
-  runSubJobsAfter: String! # command alias
+type BuiltContextGraphs {
+  id: String!
+  manifest: MonowrapManifest!
+  dependencyGraph: DependencyGraph!
+  commandGraph: CommandGraph!
 }

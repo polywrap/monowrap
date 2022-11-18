@@ -1,6 +1,6 @@
 use serde_json::json;
-use polywrap_wasm_rs::{Map, JSON};
-use jsonschema::{Draft, JSONSchema};
+use polywrap_wasm_rs::{JSON};
+use jsonschema::{JSONSchema};
 use crate::wrap::monowrap_manifest::*;
 
 pub fn get_schema() -> JSONSchema {
@@ -54,9 +54,8 @@ pub fn get_schema() -> JSONSchema {
           "pattern": "(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         },
         "args": {
-          "description": "Arguments that needs to be passed for the invocation",
-          "type": "object",
-          "additionalProperties": true
+          "description": "Msgpack encoded hexadecimal arguments that needs to be passed for the invocation",
+          "type": "string"
         },
         "requires": {
           "description": "Dependencies of the current command",

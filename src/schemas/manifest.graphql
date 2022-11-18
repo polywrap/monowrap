@@ -40,6 +40,11 @@ type Command {
   uri: String!
 
   """
+  Msgpack encoded hexadecimal arguments that needs to be passed for the invocation
+  """
+  args: String!
+
+  """
   Dependencies of the current command
   """
   requires: [String!]
