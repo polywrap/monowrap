@@ -1,1 +1,2 @@
 #import * into Monowrap from "wrap://ens/monowrap.eth"
+#import * into Subprocess from "wrap://ens/subprocess.polywrap.eth"

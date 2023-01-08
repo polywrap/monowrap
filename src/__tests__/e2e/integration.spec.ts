@@ -30,6 +30,11 @@ describe("Monowrap", () => {
       manifest: result.value,
     }, client, wrapperUri);
 
-    console.log(res)
+    if (!res.ok) throw Error();
+    console.log(Object.fromEntries(res.value.commandGraph.vertices.entries()))
+    console.log(Object.fromEntries(res.value.commandGraph.adjList.entries()))
   });
 });
+
+
+let k = { test: ["lint", "build"], lint: ["codegen"], build: ["codegen"]}

@@ -1,6 +1,6 @@
 use serde_json::json;
-use polywrap_wasm_rs::{JSON};
-use jsonschema::{JSONSchema};
+use polywrap_wasm_rs::{Map, JSON};
+use jsonschema::{Draft, JSONSchema};
 use crate::wrap::monowrap_manifest::*;
 
 pub fn get_schema() -> JSONSchema {
@@ -41,7 +41,7 @@ pub fn get_schema() -> JSONSchema {
     "command": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["alias", "uri", "args"],
+      "required": ["alias", "uri", "args", "method"],
       "properties": {
         "alias": {
           "description": "Alias for the given command",
@@ -53,9 +53,13 @@ pub fn get_schema() -> JSONSchema {
           "type": "string",
           "pattern": "(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         },
+        "method": {
+          "description": "method of the wrapper that this command will execute",
+          "type": "string"
+        },
         "args": {
           "description": "Msgpack encoded hexadecimal arguments that needs to be passed for the invocation",
-          "type": "string"
+          "type": ["object", "string"]
         },
         "requires": {
           "description": "Dependencies of the current command",

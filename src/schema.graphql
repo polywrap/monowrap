@@ -1,50 +1,49 @@
 #import * from "./schemas/manifest.graphql"
 #import * into Fs from "ens/fs.polywrap.eth"
+#import * into Concurrent from "ens/goerli/v2.interface.concurrent.polywrap.eth"
+
+#########
+# Each dependency may be executing one or more command concurrently
+# command_graph keeps track of current executing commands
+#########
 
 type Module {
   getManifest(path: String!): MonowrapManifest!
 
   buildContextGraphs(manifest: MonowrapManifest!): BuiltContextGraphs!
 
-  # executeCommand(graph: BuiltContextGraphs!, command: String!): Boolean!
-}
-
-enum CommandStatus {
-  WAITING
-  RUNNING
-  FAILED
-  SKIPPED
-  FINISHED
+  executeCommand(graph: BuiltContextGraphs!, command: String!): Boolean!
 }
 
 type CommandNode {
   alias: String!
   uri: String!
-  args: String!
+  method: String!
+  args: JSON!
   deps: BigInt!
+  visited: Boolean!
 }
 
 type CommandGraph {
   vertices: Map! @annotate(type: "Map<String!, CommandNode!>!")
-  adjList: Map! @annotate(type: "Map<String!, [String!]!>!")
+  adj_list: Map! @annotate(type: "Map<String!, [String!]!>!")
 }
 
 type DependencyNode {
   name: String!
   path: String!
   deps: BigInt!
-  command: String!
-  status: CommandStatus!
+  visited: Boolean!
 }
 
 type DependencyGraph {
   vertices: Map! @annotate(type: "Map<String!, DependencyNode!>!")
-  adjList: Map! @annotate(type: "Map<String!, [String!]!>!")
+  adj_list: Map! @annotate(type: "Map<String!, [String!]!>!")
 }
 
 type BuiltContextGraphs {
   id: String!
-  manifest: MonowrapManifest!
-  dependencyGraph: DependencyGraph!
-  commandGraph: CommandGraph!
+  dependency_graph: DependencyGraph!
+  command_graph: CommandGraph!
+  sub_deps_execute_after: String!
 }

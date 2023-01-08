@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 export function renderRustManifest(jsonSchema: string) {
   return `use serde_json::json;
@@ -34,16 +35,59 @@ pub fn deserialize_manifest(json_manifest: String) -> MonowrapManifest {
 `;
 }
 
-export function main(): void {
-  const jsonSchema = fs.readFileSync(
-    path.join(__dirname, "..", "src", "schemas", "manifest.json"),
-    { encoding: "utf-8" }
+export function renderAndWriteRustManifest() {
+  const jsonSchemaPath = path.join(
+    __dirname,
+    "..",
+    "src",
+    "schemas",
+    "manifest.json"
   );
-  const rendered = renderRustManifest(jsonSchema)
+  const jsonSchema = fs.readFileSync(jsonSchemaPath, { encoding: "utf-8" });
+  const targetFilename = path.join(__dirname, "..", "src", "manifest.rs");
+  const rendered = renderRustManifest(jsonSchema);
 
-  fs.writeFileSync(path.join(__dirname, "..", "src", "manifest.rs"), rendered, {
+  fs.writeFileSync(targetFilename, rendered, {
     encoding: "utf-8",
   });
+  console.log(`✅ Wrote Rust schema to "${targetFilename}"`);
 }
 
-main()
+function renderAndWriteGraphQLManifest(): void {
+  const jsonSchemaPath = path.join(
+    __dirname,
+    "..",
+    "src",
+    "schemas",
+    "manifest.json"
+  );
+  const targetFilename = path.join(
+    __dirname,
+    "..",
+    "src",
+    "schemas",
+    "manifest.graphql"
+  );
+
+  execSync(`json-schema-to-graphql ${jsonSchemaPath} ${targetFilename}`, {
+    encoding: "utf-8",
+  });
+
+  let output = fs.readFileSync(targetFilename, { encoding: "utf-8" });
+
+  // replace CommandArgs with JSON
+  output = output.replace(/args: CommandArgs!/g, "args: JSON!");
+  // Remove unnecessary union types
+  output = output.replace(/}[^{]*union CommandArgs/g, "}");
+  console.log(output)
+
+  fs.writeFileSync(targetFilename, output);
+  console.log(`✅ Wrote GraphQL schema to "${targetFilename}"`);
+}
+
+export function main(): void {
+  renderAndWriteRustManifest();
+  renderAndWriteGraphQLManifest();
+}
+
+main();

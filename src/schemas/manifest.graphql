@@ -40,9 +40,14 @@ type Command {
   uri: String!
 
   """
+  method of the wrapper that this command will execute
+  """
+  method: String!
+
+  """
   Msgpack encoded hexadecimal arguments that needs to be passed for the invocation
   """
-  args: String!
+  args: JSON!
 
   """
   Dependencies of the current command
