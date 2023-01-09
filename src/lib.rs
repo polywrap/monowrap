@@ -1,13 +1,13 @@
 pub mod graph;
 pub mod manifest;
 pub mod job;
+pub mod execute;
+pub mod wrap;
 
 pub use graph::*;
 pub use manifest::*;
 pub use job::*;
-pub mod wrap;
-use polywrap_wasm_rs::{BigInt, Map};
-pub use wrap::imported::concurrent_module::serialization::ArgsSchedule;
+pub use execute::*;
 pub use wrap::*;
 
 use wrap::imported::ArgsReadFileAsString;
@@ -34,7 +34,6 @@ pub fn build_context_graphs(args: ArgsBuildContextGraphs) -> BuiltContextGraphs 
 }
 
 pub fn execute_command(args: ArgsExecuteCommand) -> bool {
-    let mut builder = JobGraphBuilder::new(args.graph);
-    let job_graph = builder.build();
+    execute_graph(args.graph, args.dependency, args.command);
     return true;
 }

@@ -110,3 +110,9 @@ wrap
 .polywrap
 target
 workflows/output.json
+
+# vscode
+.vscode/
+
+# Project specific
+test.py

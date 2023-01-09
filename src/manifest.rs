@@ -1,6 +1,6 @@
 use serde_json::json;
-use polywrap_wasm_rs::{Map, JSON};
-use jsonschema::{Draft, JSONSchema};
+use polywrap_wasm_rs::JSON;
+use jsonschema::JSONSchema;
 use crate::wrap::monowrap_manifest::*;
 
 pub fn get_schema() -> JSONSchema {

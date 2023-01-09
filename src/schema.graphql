@@ -12,7 +12,7 @@ type Module {
 
   buildContextGraphs(manifest: MonowrapManifest!): BuiltContextGraphs!
 
-  executeCommand(graph: BuiltContextGraphs!, command: String!): Boolean!
+  executeCommand(graph: BuiltContextGraphs!, dependency: String!, command: String!): Boolean!
 }
 
 type CommandNode {
