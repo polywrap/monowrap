@@ -1,13 +1,13 @@
-pub mod graph;
-pub mod manifest;
-pub mod job;
 pub mod execute;
+pub mod graph;
+pub mod job;
+pub mod manifest;
 pub mod wrap;
 
-pub use graph::*;
-pub use manifest::*;
-pub use job::*;
 pub use execute::*;
+pub use graph::*;
+pub use job::*;
+pub use manifest::*;
 pub use wrap::*;
 
 use wrap::imported::ArgsReadFileAsString;
@@ -34,6 +34,32 @@ pub fn build_context_graphs(args: ArgsBuildContextGraphs) -> BuiltContextGraphs 
 }
 
 pub fn execute_command(args: ArgsExecuteCommand) -> bool {
+    println!("Executing command: {}, {}", args.command, args.dependency);
     execute_graph(args.graph, args.dependency, args.command);
     return true;
+}
+
+pub fn main(args: ArgsMain) -> u8 {
+    if args.args.len() < 3 {
+        println!("Usage: pwr monowrap.eth <manifest> <dependency> <command>");
+        return 1;
+    }
+    let (manifest, dependency, command) =
+        (&args.args[0], &args.args[1], &args.args[2]);
+
+    let manifest = get_manifest(ArgsGetManifest {
+        path: manifest.to_string(),
+    });
+    println!("Manifest fetched successfully");
+    let built_context_graphs = build_context_graphs(ArgsBuildContextGraphs {
+        manifest: manifest.to_owned(),
+    });
+    println!("Context graphs built successfully");
+    execute_command(ArgsExecuteCommand {
+        graph: built_context_graphs.to_owned(),
+        dependency: dependency.to_string(),
+        command: command.to_string(),
+    });
+    println!("All Commands executed successfully");
+    return 0;
 }

@@ -1,13 +1,14 @@
 #import * from "./schemas/manifest.graphql"
 #import * into Fs from "ens/fs.polywrap.eth"
 #import * into Concurrent from "ens/goerli/v2.interface.concurrent.polywrap.eth"
+#import { Module } into PwrApp from "wrap://ens/pwr-app.eth"
 
 #########
 # Each dependency may be executing one or more command concurrently
 # command_graph keeps track of current executing commands
 #########
 
-type Module {
+type Module implements PwrApp_Module {
   getManifest(path: String!): MonowrapManifest!
 
   buildContextGraphs(manifest: MonowrapManifest!): BuiltContextGraphs!

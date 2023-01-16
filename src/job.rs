@@ -1,13 +1,13 @@
-use polywrap_wasm_rs::{BigInt, Map};
+use polywrap_wasm_rs::{wrap_debug_log, BigInt, Map};
 use serde::{Deserialize, Serialize};
 
 use crate::wrap::*;
 
-fn get_ready_deps(deps: &Map<String, DependencyNode>) -> Option<Vec<DependencyNode>> {
-    let ready_deps: Vec<DependencyNode> = deps
+fn get_ready_deps(deps: &Map<String, DependencyNode>) -> Option<Vec<String>> {
+    let ready_deps: Vec<String> = deps
         .values()
         .filter(|dep| dep.deps == BigInt::from(0) && dep.visited == false)
-        .map(|dep| dep.to_owned())
+        .map(|dep| dep.name.clone())
         .collect();
 
     if ready_deps.len() > 0 {
@@ -17,11 +17,11 @@ fn get_ready_deps(deps: &Map<String, DependencyNode>) -> Option<Vec<DependencyNo
     }
 }
 
-fn get_ready_commands(cmds: &Map<String, CommandNode>) -> Option<Vec<CommandNode>> {
-    let ready_cmds: Vec<CommandNode> = cmds
+fn get_ready_commands(cmds: &Map<String, CommandNode>) -> Option<Vec<String>> {
+    let ready_cmds: Vec<String> = cmds
         .values()
         .filter(|cmd| cmd.deps == BigInt::from(0) && cmd.visited == false)
-        .map(|cmd| cmd.to_owned())
+        .map(|cmd| cmd.alias.clone())
         .collect();
 
     if ready_cmds.len() > 0 {
@@ -55,12 +55,19 @@ impl JobGraphBuilder {
     }
 
     pub fn build(&mut self) -> JobGraph {
+        wrap_debug_log("Building job graph");
         while let Some(mut ready_deps) =
             get_ready_deps(&self.context_graph.dependency_graph.vertices)
         {
             for dep in ready_deps.iter_mut() {
-                dep.visited = true;
-                self.add_dependency(&dep.name);
+                wrap_debug_log(format!("dependency: {}", dep).as_str());
+                self.context_graph
+                    .dependency_graph
+                    .vertices
+                    .get_mut(dep)
+                    .unwrap()
+                    .visited = true;
+                self.add_dependency(&dep);
             }
         }
 
@@ -74,84 +81,89 @@ impl JobGraphBuilder {
 
         while let Some(mut ready_cmds) = get_ready_commands(&command_graph.vertices) {
             for cmd in ready_cmds.iter_mut() {
-                cmd.visited = true;
+                wrap_debug_log(format!("command: {}", cmd).as_str());
+                command_graph
+                    .vertices
+                    .get_mut(cmd)
+                    .unwrap()
+                    .visited = true;
                 if !self
                     .job_graph
                     .vertices
-                    .contains_key(&(dep.clone(), cmd.alias.clone()))
+                    .contains_key(&(dep.clone(), cmd.clone()))
                 {
                     self.job_graph
                         .vertices
-                        .insert((dep.clone(), cmd.alias.clone()), 0);
+                        .insert((dep.clone(), cmd.clone()), 0);
                 }
 
                 if !self
                     .job_graph
                     .adj_list
-                    .contains_key(&(dep.clone(), cmd.alias.clone()))
+                    .contains_key(&(dep.clone(), cmd.clone()))
                 {
                     self.job_graph
                         .adj_list
-                        .insert((dep.clone(), cmd.alias.clone()), vec![]);
+                        .insert((dep.clone(), cmd.clone()), vec![]);
                 }
 
                 let job_adj_list = self
                     .job_graph
                     .adj_list
-                    .get_mut(&(dep.clone(), cmd.alias.clone()))
+                    .get_mut(&(dep.clone(), cmd.clone()))
                     .unwrap();
 
-                for sub_cmd_alias in command_graph
-                    .adj_list
-                    .get(&cmd.alias.clone())
-                    .unwrap()
-                    .clone()
-                {
-                    let deps = *self
-                        .job_graph
-                        .vertices
-                        .get(&(dep.clone(), sub_cmd_alias.clone()))
-                        .unwrap_or(&0);
-                    self.job_graph
-                        .vertices
-                        .insert((dep.clone(), sub_cmd_alias.clone()), deps + 1);
+                match command_graph.adj_list.get(&cmd.clone()) {
+                    Some(sub_cmds) => {
+                        for sub_cmd_alias in sub_cmds.clone() {
+                            let deps = *self
+                                .job_graph
+                                .vertices
+                                .get(&(dep.clone(), sub_cmd_alias.clone()))
+                                .unwrap_or(&0);
+                            self.job_graph
+                                .vertices
+                                .insert((dep.clone(), sub_cmd_alias.clone()), deps + 1);
 
-                    job_adj_list.push((dep.clone(), sub_cmd_alias.clone()));
-                    command_graph.vertices.get_mut(&sub_cmd_alias).unwrap().deps -= 1;
+                            job_adj_list.push((dep.clone(), sub_cmd_alias.clone()));
+                            command_graph.vertices.get_mut(&sub_cmd_alias).unwrap().deps -= 1;
+                        }
+                    }
+                    None => (),
                 }
 
-                if cmd.alias == sub_deps_execute_after {
-                    let job_adj_list = self
-                        .job_graph
-                        .adj_list
-                        .get_mut(&(dep.to_string(), cmd.alias.clone()))
-                        .unwrap();
+                if cmd.clone() == sub_deps_execute_after {
+                    match dependency_graph.adj_list.get(&dep.clone()) {
+                        Some(sub_deps) => {
+                            for sub_dep in sub_deps {
+                                match get_ready_commands(&self.context_graph.command_graph.vertices)
+                                {
+                                    Some(ready_cmds) => {
+                                        for ready_cmd in ready_cmds {
+                                            let deps = *self
+                                                .job_graph
+                                                .vertices
+                                                .get(&(sub_dep.clone(), ready_cmd.clone()))
+                                                .unwrap_or(&0);
+                                            self.job_graph.vertices.insert(
+                                                (sub_dep.clone(), ready_cmd.clone()),
+                                                deps + 1,
+                                            );
 
-                    for sub_dep in dependency_graph.adj_list.get(&dep.to_string()).unwrap() {
-                        match get_ready_commands(&self.context_graph.command_graph.vertices) {
-                            Some(ready_cmds) => {
-                                for ready_cmd in ready_cmds {
-                                    let deps = *self
-                                        .job_graph
-                                        .vertices
-                                        .get(&(sub_dep.to_string(), ready_cmd.alias.clone()))
-                                        .unwrap_or(&0);
-                                    self.job_graph.vertices.insert(
-                                        (sub_dep.to_string(), ready_cmd.alias.clone()),
-                                        deps + 1,
-                                    );
-
-                                    job_adj_list
-                                        .push((sub_dep.to_string(), ready_cmd.alias.clone()));
-                                    dependency_graph
-                                        .vertices
-                                        .get_mut(&sub_dep.to_string())
-                                        .unwrap()
-                                        .deps -= 1;
+                                            job_adj_list
+                                                .push((sub_dep.clone(), ready_cmd.clone()));
+                                            dependency_graph
+                                                .vertices
+                                                .get_mut(&sub_dep.clone())
+                                                .unwrap()
+                                                .deps -= 1;
+                                        }
+                                    }
+                                    None => break,
                                 }
                             }
-                            None => break,
                         }
+                        None => (),
                     }
                 }
             }
