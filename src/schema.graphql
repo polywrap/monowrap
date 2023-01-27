@@ -2,6 +2,7 @@
 #import * into Fs from "ens/fs.polywrap.eth"
 #import * into Concurrent from "ens/goerli/v2.interface.concurrent.polywrap.eth"
 #import { Module } into PwrApp from "wrap://ens/pwr-app.eth"
+#import { Module, LogLevel } into Logger from "wrap://ens/goerli/logger.polywrap.eth"
 
 #########
 # Each dependency may be executing one or more command concurrently
@@ -13,7 +14,7 @@ type Module implements PwrApp_Module {
 
   buildContextGraphs(manifest: MonowrapManifest!): BuiltContextGraphs!
 
-  executeCommand(graph: BuiltContextGraphs!, dependency: String!, command: String!): Boolean!
+  executeCommand(graph: BuiltContextGraphs!, scope: [String!]!, commands: [String!]!, logLevel: Logger_LogLevel!): Boolean!
 }
 
 type CommandNode {

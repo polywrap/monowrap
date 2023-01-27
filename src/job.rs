@@ -1,6 +1,9 @@
-use polywrap_wasm_rs::{wrap_debug_log, BigInt, Map};
+use std::collections::BTreeSet;
+
+use polywrap_wasm_rs::{BigInt, Map};
 use serde::{Deserialize, Serialize};
 
+use crate::logger::*;
 use crate::wrap::*;
 
 fn get_ready_deps(deps: &Map<String, DependencyNode>) -> Option<Vec<String>> {
@@ -41,26 +44,42 @@ pub struct JobGraph {
 pub struct JobGraphBuilder {
     job_graph: JobGraph,
     context_graph: BuiltContextGraphs,
+    dep_cmds_counter: Map<String, u32>,
+    commands: BTreeSet<String>,
+    logger: Logger,
 }
 
 impl JobGraphBuilder {
-    pub fn new(context_graph: BuiltContextGraphs) -> JobGraphBuilder {
+    pub fn new(
+        context_graph: BuiltContextGraphs,
+        dep_cmds_counter: Map<String, u32>,
+        commands: Vec<String>,
+        logger: Logger,
+    ) -> JobGraphBuilder {
         JobGraphBuilder {
             job_graph: JobGraph {
                 vertices: Map::<(String, String), u32>::new(),
                 adj_list: Map::<(String, String), Vec<(String, String)>>::new(),
             },
             context_graph,
+            dep_cmds_counter,
+            commands: commands.iter().map(|x| x.clone()).collect(),
+            logger: logger.sub_logger("job_graph_builder".to_string()),
         }
     }
 
     pub fn build(&mut self) -> JobGraph {
-        wrap_debug_log("Building job graph");
-        while let Some(mut ready_deps) =
+        self.logger.debug("Building job graph...".to_string());
+        'while_loop: while let Some(mut ready_deps) =
             get_ready_deps(&self.context_graph.dependency_graph.vertices)
         {
             for dep in ready_deps.iter_mut() {
-                wrap_debug_log(format!("dependency: {}", dep).as_str());
+                self.logger.debug(format!("dependency: {}", dep));
+
+                if self.dep_cmds_counter.len() == 0 {
+                    break 'while_loop;
+                }
+
                 self.context_graph
                     .dependency_graph
                     .vertices
@@ -79,14 +98,10 @@ impl JobGraphBuilder {
         let dependency_graph = &mut self.context_graph.dependency_graph;
         let sub_deps_execute_after = self.context_graph.sub_deps_execute_after.clone();
 
-        while let Some(mut ready_cmds) = get_ready_commands(&command_graph.vertices) {
+        'while_loop: while let Some(mut ready_cmds) = get_ready_commands(&command_graph.vertices) {
             for cmd in ready_cmds.iter_mut() {
-                wrap_debug_log(format!("command: {}", cmd).as_str());
-                command_graph
-                    .vertices
-                    .get_mut(cmd)
-                    .unwrap()
-                    .visited = true;
+                self.logger.debug(format!("command: {} for dep: {}", cmd, dep));
+                command_graph.vertices.get_mut(cmd).unwrap().visited = true;
                 if !self
                     .job_graph
                     .vertices
@@ -150,8 +165,7 @@ impl JobGraphBuilder {
                                                 deps + 1,
                                             );
 
-                                            job_adj_list
-                                                .push((sub_dep.clone(), ready_cmd.clone()));
+                                            job_adj_list.push((sub_dep.clone(), ready_cmd.clone()));
                                             dependency_graph
                                                 .vertices
                                                 .get_mut(&sub_dep.clone())
@@ -165,6 +179,15 @@ impl JobGraphBuilder {
                         }
                         None => (),
                     }
+                }
+            
+                if self.commands.contains(cmd) && self.dep_cmds_counter.contains_key(dep) {
+                    let dep_cmds_count = self.dep_cmds_counter.get_mut(dep).unwrap();
+                    if *dep_cmds_count == 1 {
+                        self.dep_cmds_counter.remove(dep);
+                        break 'while_loop;
+                    }
+                    *dep_cmds_count -= 1;
                 }
             }
         }

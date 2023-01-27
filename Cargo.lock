@@ -157,6 +157,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "getopts"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
+dependencies = [
+ "unicode-width",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -166,6 +175,12 @@ dependencies = [
  "libc",
  "wasi",
 ]
+
+[[package]]
+name = "glob-match"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d11b23dfe15f29d4958329ac502d68fbae949f4075f0a3ddb8024cd1b445d753"
 
 [[package]]
 name = "heck"
@@ -414,9 +429,9 @@ checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
 name = "polywrap-wasm-rs"
-version = "0.1.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27b79b5780d0a24f0081280edd12957c0f3354a91665d8561177dd6248a977f5"
+checksum = "b7ace157b21a5d6519c88a8b757cb1cb2e7adf4200049bdfca910e2b633175bb"
 dependencies = [
  "bigdecimal",
  "byteorder",
@@ -588,6 +603,8 @@ dependencies = [
 name = "template-wasm-rs"
 version = "0.1.0"
 dependencies = [
+ "getopts",
+ "glob-match",
  "jsonschema",
  "polywrap-wasm-rs",
  "serde",

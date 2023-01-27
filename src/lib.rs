@@ -3,12 +3,16 @@ pub mod graph;
 pub mod job;
 pub mod manifest;
 pub mod wrap;
+pub mod arg_parse;
+pub mod logger;
 
 pub use execute::*;
 pub use graph::*;
 pub use job::*;
 pub use manifest::*;
 pub use wrap::*;
+pub use arg_parse::*;
+pub use logger::*;
 
 use wrap::imported::ArgsReadFileAsString;
 
@@ -34,32 +38,44 @@ pub fn build_context_graphs(args: ArgsBuildContextGraphs) -> BuiltContextGraphs 
 }
 
 pub fn execute_command(args: ArgsExecuteCommand) -> bool {
-    println!("Executing command: {}, {}", args.command, args.dependency);
-    execute_graph(args.graph, args.dependency, args.command);
+    execute_command_in_scope(args.graph, args.scope, args.commands, args.log_level);
     return true;
 }
 
 pub fn main(args: ArgsMain) -> u8 {
-    if args.args.len() < 3 {
-        println!("Usage: pwr monowrap.eth <manifest> <dependency> <command>");
-        return 1;
-    }
-    let (manifest, dependency, command) =
-        (&args.args[0], &args.args[1], &args.args[2]);
+    let parsed_args = match arg_parse(args.args) {
+        ArgParseResult::Args(args) => args,
+        ArgParseResult::Help(help) => {
+            print(help);
+            return 0;
+        },
+        ArgParseResult::Error(err) => {
+            print_error(err);
+            return 1;
+        }
+    };
+
+    let logger = Logger::new("monowrap".to_string(), parsed_args.log_level);
+
+    logger.debug(format!("Args: {:?}", parsed_args));
 
     let manifest = get_manifest(ArgsGetManifest {
-        path: manifest.to_string(),
+        path: parsed_args.manifest.clone(),
     });
-    println!("Manifest fetched successfully");
+
+    logger.info(format!("ℹ️ Using manifest: {}", parsed_args.manifest));
+
     let built_context_graphs = build_context_graphs(ArgsBuildContextGraphs {
-        manifest: manifest.to_owned(),
+        manifest: manifest.clone(),
     });
-    println!("Context graphs built successfully");
+    logger.info("✅ Context graphs built successfully!".to_string());
+
     execute_command(ArgsExecuteCommand {
-        graph: built_context_graphs.to_owned(),
-        dependency: dependency.to_string(),
-        command: command.to_string(),
+        graph: built_context_graphs.clone(),
+        scope: parsed_args.scope.clone(),
+        commands: parsed_args.commands.clone(),
+        log_level: parsed_args.log_level.clone(),
     });
-    println!("All Commands executed successfully");
+    logger.info("✅ All Commands executed successfully!".to_string());
     return 0;
 }
