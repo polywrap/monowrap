@@ -128,26 +128,26 @@ impl JobGraphBuilder {
                     .get_mut(&(dep.clone(), cmd.clone()))
                     .unwrap();
 
-                match command_graph.adj_list.get(&cmd.clone()) {
-                    Some(sub_cmds) => {
-                        for sub_cmd_alias in sub_cmds.clone() {
-                            let deps = *self
-                                .job_graph
-                                .vertices
-                                .get(&(dep.clone(), sub_cmd_alias.clone()))
-                                .unwrap_or(&0);
-                            self.job_graph
-                                .vertices
-                                .insert((dep.clone(), sub_cmd_alias.clone()), deps + 1);
-
-                            job_adj_list.push((dep.clone(), sub_cmd_alias.clone()));
-                            command_graph.vertices.get_mut(&sub_cmd_alias).unwrap().deps -= 1;
+                if cmd.clone() != sub_deps_execute_after {
+                    match command_graph.adj_list.get(&cmd.clone()) {
+                        Some(sub_cmds) => {
+                            for sub_cmd_alias in sub_cmds.clone() {
+                                let deps = *self
+                                    .job_graph
+                                    .vertices
+                                    .get(&(dep.clone(), sub_cmd_alias.clone()))
+                                    .unwrap_or(&0);
+                                self.job_graph
+                                    .vertices
+                                    .insert((dep.clone(), sub_cmd_alias.clone()), deps + 1);
+    
+                                job_adj_list.push((dep.clone(), sub_cmd_alias.clone()));
+                                command_graph.vertices.get_mut(&sub_cmd_alias).unwrap().deps -= 1;
+                            }
                         }
+                        None => (),
                     }
-                    None => (),
-                }
-
-                if cmd.clone() == sub_deps_execute_after {
+                } else {
                     match dependency_graph.adj_list.get(&dep.clone()) {
                         Some(sub_deps) => {
                             for sub_dep in sub_deps {
