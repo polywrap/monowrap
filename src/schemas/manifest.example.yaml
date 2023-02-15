@@ -1,8 +1,7 @@
 name: monowrap
-commands: 
+commands:
   - alias: codegen
     uri: ens/command.polywrap.eth
-    method: hello
     args:
       command: "yarn codegen"
   - alias: build
